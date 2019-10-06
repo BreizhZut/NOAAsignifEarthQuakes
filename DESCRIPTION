@@ -1,0 +1,25 @@
+Package: NOAAsignifEarthQuakes
+Type: Package
+Title: Explore the NOAA Significant Earthquake Database
+Version: 0.1.0
+Author: Dylan Tweed
+Maintainer: Dylan Tweed <dylan.tweed@googlemail.comt>
+Description: Read and clean data from the NOAA Significant Earthquake Database. Provide exploratory visualization tools. Source: National Geophysical Data Center / World Data Service (NGDC/WDS); Significant Earthquake Database; National Geophysical Data Center, NOAA. doi:10.7289/V5TD9V7K.
+Depends: R (>= 3.5.0)
+License: GPL
+Encoding: UTF-8
+LazyData: true
+Suggests: testthat,
+    knitr,
+    rmarkdown
+Imports:
+    dplyr,
+    lubridate,
+    magrittr,
+    readr,
+    tidyselect,
+    ggplot2,
+    grid,
+    scales
+VignetteBuilder: knitr
+RoxygenNote: 6.1.1

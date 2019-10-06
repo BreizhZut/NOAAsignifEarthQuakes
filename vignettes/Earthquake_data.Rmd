@@ -1,0 +1,118 @@
+---
+title: "NOAA Significant Earth Quake Data"
+author: "D. P. Tweed"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning= FALSE,
+  message=FALSE
+)
+```
+
+```{r}
+
+```
+ 
+## Source
+
+### Origin
+
+National Geophysical Data Center / World Data Service (NGDC/WDS): Significant Earthquake Database. National Geophysical Data Center, NOAA. (doi:10.7289/V5TD9V7K)[https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.ngdc.mgg.hazards:G012153] 
+
+### Codebook
+
+We give a short description of the feature present in the raw data. We indicate the column type as we set it while reading the data. 
+
+```{r read_data, echo=FALSE}
+library(readr)
+library(NOAAsignifEarthQuakes)
+file_noaa <- system.file("extdata","signif.txt",package="NOAAsignifEarthQuakes",mustWork=TRUE)
+noaa_raw <- load_NOAA_db(file_noaa)
+```
+```{r echo=FALSE}
+noaa_name <- colnames(noaa_raw)
+```
+
+1. Earthquake Id and type
+    * **`r noaa_name[1]`** : [Character] unique id for the earthquake
+    * **`r noaa_name[2]`** : [Character] Categorical set to **Tsu** if the earthquake generated a Tsunami (set to NA otherwise)
+1. Date Time variable
+    * **`r noaa_name[3]`** : [Integer] 4 digit year corresponding the event, range -2150 to 2018
+    * **`r noaa_name[4]`** : [Integer] 2 digit month corresponding the event, could be NA
+    * **`r noaa_name[5]`** : [Integer] 2 digit day of the month corresponding to the event
+    * **`r noaa_name[6]`** : [Integer] 2 digit hour corresponding the event
+    * **`r noaa_name[7]`** : [Integer] 2 digit minute corresponding to the event
+    * **`r noaa_name[8]`** : [Numeric] 2 digit seconds corresponding to the event
+1. Earthquake properties
+    * **`r noaa_name[9]`** : [Integer] Depth of the earthquake [km] (Valid values: 0 to 700 km)
+    * **`r noaa_name[10]`** : [Numeric] Equivalent Magnitude, take the value from one of the column below (supposidly only up to one contains a non-missing value)
+    * **`r noaa_name[11]`** : [Numeric] [Magnitude based on the moments magnitue scale](https://www.ngdc.noaa.gov/nndc/DescribeField.jsp?dataset=101650&s=20&field_name=EQ_MAG_MW) (Valid values: 0.0 to 9.9)
+    * **`r noaa_name[12]`** : [Numeric] [Surface-wave magnitude](https://www.ngdc.noaa.gov/nndc/DescribeField.jsp?dataset=101650&s=20&field_name=EQ_MAG_MS) (Valid values: 0.0 to 9.9)
+    * **`r noaa_name[13]`** : [Numeric] [Compressional body wave (P-wave) magnitude](https://www.ngdc.noaa.gov/nndc/DescribeField.jsp?dataset=101650&s=20&field_name=EQ_MAG_MB) (Valid values: 0.0 to 9.9)
+    * **`r noaa_name[14]`** : [Numeric] [Standard Richter Magintude](https://www.ngdc.noaa.gov/nndc/DescribeField.jsp?dataset=101650&s=20&field_name=EQ_MAG_ML) (Valid values: 0.0 to 9.9)
+    * **`r noaa_name[15]`** : [Numeric] [Magnitude estimated for field area, before sesmic instruments were in use](https://www.ngdc.noaa.gov/nndc/DescribeField.jsp?dataset=101650&s=20&field_name=EQ_MAG_MFA) (Valid values: 0.0 to 9.9)
+    * **`r noaa_name[16]`** : [Numeric] [Magnitude estimated using and unidentified method](https://www.ngdc.noaa.gov/nndc/DescribeField.jsp?dataset=101650&s=20&field_name=EQ_MAG_UNK) (Valid values: 0.0 to 9.9)
+    * **`r noaa_name[17]`** : [Character] [Modified Mercalli Intensity](https://www.ngdc.noaa.gov/nndc/DescribeField.jsp?dataset=101650&s=20&field_name=INTENSITY) (Valid values: 1 to 12)
+1. Location
+    * **`r noaa_name[18]`** : [Character] Country name where the event occured
+    * **`r noaa_name[19]`** : [Character] State where the event occured, 
+    * **`r noaa_name[20]`** : [Character] Location name ex: City or geographical landmark
+    * **`r noaa_name[21]`** : [Double] Latitude coordinates of the event
+    * **`r noaa_name[22]`** : [Double] Longitude coordinates of the event
+    * **`r noaa_name[23]`** : [Character] Event location, contains country name and locality
+1. Death and injuries
+    * **`r noaa_name[24]`** : [Integer] Number of deaths
+    * **`r noaa_name[25]`** : [Character] Factorial code 1 to 4
+    * **`r noaa_name[26]`** : [Integer] Number of Missing persons
+    * **`r noaa_name[27]`** : [Character] Factorial code 1 to 4
+    * **`r noaa_name[28]`** : [Integer] Number of injured persons
+    * **`r noaa_name[29]`** : [Character] Factorial code 1 to 4
+1. Property Damage
+    * **`r noaa_name[30]`** : [Numeric] Damage amount in M$
+    * **`r noaa_name[31]`** : [Character] Factorial code 1 to 4
+    * **`r noaa_name[32]`** : [Integer] Number of Houses destroyed
+    * **`r noaa_name[33]`** : [Character] Factorial code 1 to 4
+    * **`r noaa_name[34]`** : [Integer] Number of Houses damaged
+    * **`r noaa_name[35]`** : [Character] Factorial code 1 to 4
+1. Total Death and injuries including related events (Tsunami, Volcano etc..)
+    * **`r noaa_name[36]`** : [Integer] Number of deaths
+    * **`r noaa_name[37]`** : [Character] Factorial code 1 to 4
+    * **`r noaa_name[38]`** : [Integer] Number of Missing persons
+    * **`r noaa_name[39]`** : [Character] Factorial code 1 to 4
+    * **`r noaa_name[40]`** : [Integer] Number of injured
+    * **`r noaa_name[41]`** : [Character] Factorial code 1 to 4
+ 1. Total Property Damage including related events (Tsunami, Volcano etc..)
+    * **`r noaa_name[42]`** : [Numeric] Damage amount in M$
+    * **`r noaa_name[43]`** : [Character] Factorial code 1 to 4
+    * **`r noaa_name[44]`** : [Integer] Number of Houses destroyed
+    * **`r noaa_name[45]`** : [Character] Factorial code 1 to 4
+    * **`r noaa_name[46]`** : [Integer] Number of Houses damaged
+    * **`r noaa_name[47]`** : [Character] Factorial code 1 to 4
+
+## Reading the data 
+
+```{r ref.label='read_data'}
+```
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(noaa_raw, 10))
+```
+
+## Cleaning the data
+
+```{r clean_data, echo=FALSE}
+clean_noaa <- eq_clean_data(head(noaa_raw, 10))
+```
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(clean_noaa, 10))
+```
