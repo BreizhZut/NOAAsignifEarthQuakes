@@ -4,7 +4,7 @@
 \alias{timeline_draw}
 \title{Build a grob describing a timeline of earthquake events}
 \usage{
-timeline_draw(data, panel_scales,coord)
+timeline_draw(data, panel_scales,coord,alpha=NULL)
 }
 \arguments{
 \item{data}{tbl_df input untransformed dataframe}
@@ -12,6 +12,8 @@ timeline_draw(data, panel_scales,coord)
 \item{panel_scales}{panel parameters}
 
 \item{coord}{Coord object required to transform data coordinates to figure coordinates}
+
+\item{alpha}{alpha parameter for transparency}
 }
 \value{
 gTree instance
@@ -19,18 +21,11 @@ gTree instance
 \description{
 Each eathquakes is represented by a circle grob along a time axis.
 Optional feature enable to add a vertical axis usualy country aesthetic \code{y}.
-Additional optional aesthetics \code{fill} an \code{r} enable the user to represent
+Additional optional aesthetics \code{fill} an \code{size} enable the user to represent
 additional continuous variables such as nb of deaths or magnitude.
 }
 \examples{
 \dontrun{
-GeomTimeLine <- ggplot2:: ggproto(
-     "GeomTimeLine", ggplot2::Geom,
-     required_aes = c('x'),
-     default_aes = ggplot2::aes(y=0.5,shape=21,size=1,fill=1,r=10),
-     draw_key = c("r","fill"),
-     draw_panel = timeline_draw
-  )
 ggplot2:: ggplot()+
 ggplot2:: layer(
     geom = GeomTimeLine, mapping = ggplot2:: aes(x=DATE),

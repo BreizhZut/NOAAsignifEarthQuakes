@@ -4,7 +4,7 @@
 \alias{timeline_label}
 \title{timeline_label}
 \usage{
-timeline_label(data, panel_scales,coord)
+timeline_label(data, panel_scales,coord,n_max=NULL)
 }
 \arguments{
 \item{data}{input data transformed for vizualisation}
@@ -12,6 +12,8 @@ timeline_label(data, panel_scales,coord)
 \item{panel_scales}{panel parameters}
 
 \item{coord}{Coord object required to transform data coordinates to figure coordinates}
+
+\item{n_max}{parameter number of earthquake location to display by country}
 }
 \value{
 gTree instance

@@ -4,14 +4,12 @@
 \alias{geom_timeline_label}
 \title{geom_timeline_label}
 \usage{
-geom_timeline_label(data=NULL, n_max =5, ...)
+geom_timeline_label(data=NULL, n_max =5)
 }
 \arguments{
 \item{data}{input data transformed for vizualisation}
 
 \item{n_max}{maximun number of earthquake to label by countries default value 5}
-
-\item{...}{inherited parameters}
 }
 \value{
 ggplot2 layer

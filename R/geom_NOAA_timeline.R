@@ -35,6 +35,7 @@ timeline_data <- function(data=NULL,dmin=NULL,dmax=NULL,countries=NULL){
     COUNTRY <- NULL
     MAG <- NULL
     DEATHS <- NULL
+
     # if start date set remove data prior start date
     if(!is.null(dmin)){
         data <- data %>% dplyr::filter(DATE>=lubridate::ymd(dmin))
@@ -49,20 +50,13 @@ timeline_data <- function(data=NULL,dmin=NULL,dmax=NULL,countries=NULL){
     if(!is.null(countries)){
         # warning Grouping rowwise data frame strips rowwise nature comes from
         data <- data %>%
-                dplyr::filter(COUNTRY %in% countries) %>%
+                dplyr::filter(COUNTRY %in% countries) %>% as.data.frame() %>%
                 dplyr::group_by(COUNTRY) %>%
-                dplyr::mutate(mrank = dplyr::row_number(dplyr::desc(MAG))) %>%
+                dplyr::mutate('MAG_RANK' = dplyr::row_number(dplyr::desc(MAG))) %>%
                 dplyr::ungroup()
     } else {
-        data <- data %>% dplyr:: mutate(mrank = dplyr::row_number(dplyr::desc(MAG)))
+        data <- data %>% dplyr:: mutate('MAG_RANK' = dplyr::row_number(dplyr::desc(MAG)))
     }
-    # cap the number of deuths to the ).75 percentile
-    death_sc <- ceiling(stats::quantile(data$DEATHS,p=0.75,na.rm=TRUE))
-    sat_death <- function(x){
-        x[x>death_sc] <- death_sc
-        x
-    }
-    data <- data %>% dplyr::mutate(DEATHS=sat_death(DEATHS))
     data
 }
 
@@ -72,18 +66,19 @@ timeline_data <- function(data=NULL,dmin=NULL,dmax=NULL,countries=NULL){
 #' @description
 #' Each eathquakes is represented by a circle grob along a time axis.
 #' Optional feature enable to add a vertical axis usualy country aesthetic \code{y}.
-#' Additional optional aesthetics \code{fill} an \code{r} enable the user to represent
+#' Additional optional aesthetics \code{fill} an \code{size} enable the user to represent
 #' additional continuous variables such as nb of deaths or magnitude.
 #'
 #' @param data tbl_df input untransformed dataframe
 #' @param panel_scales panel parameters
 #' @param coord Coord object required to transform data coordinates to figure coordinates
+#' @param alpha alpha parameter for transparency
 #'
-#' @usage timeline_draw(data, panel_scales,coord)
+#' @usage timeline_draw(data, panel_scales,coord,alpha=NULL)
 #'
 #' @importFrom dplyr filter group_by mutate ungroup
-#' @importFrom grid circleGrob gpar segmentsGrob gTree
-#' @importFrom scales rescale alpha
+#' @importFrom grid pointsGrob gpar segmentsGrob gTree unit
+#' @importFrom scales alpha
 #'
 #' @return gTree instance
 #'
@@ -91,13 +86,6 @@ timeline_data <- function(data=NULL,dmin=NULL,dmax=NULL,countries=NULL){
 #'
 #' @examples
 #' \dontrun{
-#' GeomTimeLine <- ggplot2:: ggproto(
-#'      "GeomTimeLine", ggplot2::Geom,
-#'      required_aes = c('x'),
-#'      default_aes = ggplot2::aes(y=0.5,shape=21,size=1,fill=1,r=10),
-#'      draw_key = c("r","fill"),
-#'      draw_panel = timeline_draw
-#'   )
 #' ggplot2:: ggplot()+
 #' ggplot2:: layer(
 #'     geom = GeomTimeLine, mapping = ggplot2:: aes(x=DATE),
@@ -106,32 +94,29 @@ timeline_data <- function(data=NULL,dmin=NULL,dmax=NULL,countries=NULL){
 #'     params = list(na.rm = TRUE)
 #'   )
 #' }
-timeline_draw <- function(data, panel_scales,coord) {
+timeline_draw <- function(data, panel_scales,coord,alpha=NULL) {
 
     # declare feature as variable to avoid error message
     y <- NULL
     size <- NULL
 
     # transform coordinates
-    coords <- data  %>%
-        coord$transform(panel_scales) %>%
-        dplyr::mutate(size=replace(size,is.na(size),0))
-    yshift <- min(coords$y)-0.1
-    coords <- coords%>% dplyr::mutate(y=y-yshift)
-    # str(coords)
+    coords <- data  %>% coord$transform(panel_scales)
+    print(summary(coords$size))
     # draw circles for each earthquake
-    earthquakes <- grid::circleGrob(
+    earthquakes <- grid::pointsGrob(
         x = coords$x,
         y = coords$y,
-        r = scales::rescale(coords$r,from=c(2,10),to=c(0.01,0.02)),
-        # default.units = "native",
-        gp= grid::gpar(fill = scales::alpha(data$fill),alpha = 0.5)
+        default.units = "native",
+        size= grid::unit(coords$size,'char'),
+        pch= 20,
+        gp= grid::gpar(col = scales::alpha(coords$fill),alpha = alpha,fontsize=5)
     )
     # draw the timeline line
     timeline <- grid::segmentsGrob(
         y0=coords$y,
         y1=coords$y,
-        gp= grid::gpar(col='gray')
+        gp= grid::gpar(col='gray',lwd=1.5)
     )
 
     # return the gTree instance
@@ -154,11 +139,12 @@ timeline_draw <- function(data, panel_scales,coord) {
 #' @param xmin start date for data vizualisation [Character] encoded as YYYY-MM-DD or [Date]
 #' @param xmax end date for data vizualisation [Character] encoded as YYYY-MM-DD or [Date]
 #' @param countries [Character] list of Countries to filter
-#' @param ... inherited parameters
+#' @param alpha alpha parameter for transparency
 #'
-#' @usage geom_timeline(data = NULL, xmin=NULL,xmax=NULL, countries= NULL,...)
+#' @usage geom_timeline(data = NULL,mapping=NULL,xmin=NULL,xmax=NULL, countries= NULL,alpha=0.5)
 #'
 #' @importFrom ggplot2 ggproto aes
+#' @importFrom utils modifyList
 #' @importFrom lubridate ymd
 #' @importFrom dplyr filter mutate
 #'
@@ -169,31 +155,45 @@ timeline_draw <- function(data, panel_scales,coord) {
 #' ggplot(data=clean_data,aes(x=DATE,y=COUNTRY)) + geom_timeline()
 #' }
 #'
-#' @seealso timeline_data timeline_draw geom_timeline_label
+#' @seealso timeline_data timeline_draw geom_timeline_label scale_y_discrete expand_scale
 #'
 #' @export
-geom_timeline <- function(data = NULL, xmin=NULL,xmax=NULL, countries= NULL,...) {
+geom_timeline <- function(data = NULL,mapping=NULL,xmin=NULL,xmax=NULL, countries= NULL,alpha=0.5) {
 
     # declare feature as variable to avoid error message
     y <- NULL
     DATE <- NULL
+    mrank <- NULL
+    LOCATION_NAME <- NULL
+    COUNTRY <- NULL
+    DEATHS <- NULL
+    MAG <- NULL
+    MAG_RANK <- NULL
+
+    # apply timeline_data for date and country selection
+    data <- data %>% timeline_data(dmin=xmin,dmax=xmax,countries=countries)
+
+    # define minimal aesthetics
+    min_mapping <- ggplot2:: aes(x=DATE,rank=MAG_RANK,label=LOCATION_NAME)
+
+    # set default mapping to enforce x to be the DATE
+    if (is.null(mapping)) {
+        mapping <- min_mapping
+    } else {
+        mapping <- utils::modifyList(min_mapping,mapping)
+    }
 
     # define GeomTimeLine instance
     GeomTimeLine <- ggplot2:: ggproto(
         "GeomTimeLine", ggplot2::Geom,
         required_aes = c('x'),
-        default_aes = ggplot2::aes(y=0.5,shape=21,size=1,fill=1,r=10),#label=LOCATION_NAME,mag=MAG),
-        draw_key = c("r","fill"),
+        default_aes = ggplot2::aes(y=0.2,size=5,fill=1),
+        draw_key = ggplot2::draw_key_pointrange,
         draw_panel = timeline_draw
     )
 
-    # set default mapping to enforce x to be the DATE
-    mapping <- ggplot2:: aes(x=DATE,...)
-
-    # apply timeline_data for date and country selection
-    data <- data %>% timeline_data(dmin=xmin,dmax=xmax,countries=countries)
     # create the ggplot
-    ggplot2:: ggplot()+
+    ggplot2:: ggplot(data=data,mapping = mapping)+
     # modify theme
     ggplot2::theme_minimal() +
     ggplot2::theme(
@@ -201,14 +201,18 @@ geom_timeline <- function(data = NULL, xmin=NULL,xmax=NULL, countries= NULL,...)
         axis.line.x = ggplot2::element_line(colour='black',size=0.5),
         panel.grid = ggplot2::element_blank(),
         axis.ticks.x = ggplot2::element_line(colour='black',size=0.5),ggplot2::element_line(colour=NULL,size=NULL),
+        panel.grid.major.y  = ggplot2::element_line(colour = "gray", size = 1),
         legend.position = "bottom"
     ) +
+    ggplot2::scale_y_discrete(expand = ggplot2::expand_scale(mult = c(0.2, 0.8))) +
+    ggplot2::scale_radius(range=c(0.5,5)) +
     # apply geom layer
     ggplot2:: layer(
-        geom = GeomTimeLine, mapping = mapping,
-        data = data, stat = "identity", position = "identity",
+        geom = GeomTimeLine,
+        stat = "identity", position = "identity",
         show.legend = TRUE, inherit.aes = TRUE,
-        params = list(na.rm = TRUE)
+        params = list(na.rm = TRUE,alpha=alpha),
+        key_glyph =ggplot2::draw_key_point
     )
 
 }
@@ -219,23 +223,52 @@ geom_timeline <- function(data = NULL, xmin=NULL,xmax=NULL, countries= NULL,...)
 #' @param data input data transformed for vizualisation
 #' @param panel_scales panel parameters
 #' @param coord Coord object required to transform data coordinates to figure coordinates
+#' @param n_max parameter number of earthquake location to display by country
 #'
-#' @usage timeline_label(data, panel_scales,coord)
+#' @usage timeline_label(data, panel_scales,coord,n_max=NULL)
+#'
+#' @importFrom dplyr filter
+#' @importFrom grid segmentsGrob textGrob gTree
 #'
 #' @return gTree instance
 #' @seealso geom_timeline_label
-timeline_label <- function(data, panel_scales,coord) {
+timeline_label <- function(data, panel_scales,coord,n_max=NULL) {
 
+    # filter data to keep only row with rank bellow n_max
+    data <-  data %>% dplyr::filter(rank <= n_max) %>% dplyr::mutate(group=dplyr::row_number())
+    # transfrom the data into the coordnate system
+    coords <- data  %>% coord$transform(panel_scales)
+    # buid vertical ticks mark using segment gorb
+    timeline_ticks <- grid::segmentsGrob(
+        x0=coords$x,
+        x1=coords$x,
+        y0=coords$y,
+        y1=coords$y+0.18,
+        gp= grid::gpar(alpha=0.7)
+    )
+    timeline_text <- grid::textGrob(
+        coords$label,
+        x=coords$x,
+        y=coords$y+0.2,
+        hjust=0,
+        vjust=0.5,
+        rot=45
+    )
+    # return the gTree instance
+    grid::gTree(children=grid::gList(
+        timeline_ticks,
+        timeline_text
+    ))
 }
 
 #' geom_timeline_label
 #'
 #' @param data input data transformed for vizualisation
 #' @param n_max maximun number of earthquake to label by countries default value 5
-#' @param ... inherited parameters
 #'
-#' @usage geom_timeline_label(data=NULL, n_max =5, ...)
+#' @usage geom_timeline_label(data=NULL, n_max =5)
 #'
+#' @importFrom ggplot2 ggproto layer
 #' @return ggplot2 layer
 #' @export
 #'
@@ -246,6 +279,20 @@ timeline_label <- function(data, panel_scales,coord) {
 #'      geom_timeline_label()
 #' }
 #' @seealso timeline_label geom_timeline
-geom_timeline_label <- function(data=NULL, n_max =5, ...) {
+geom_timeline_label <- function(data=NULL, n_max =5) {
 
+    # define GeomTimeLine instance
+    GeomTimeLineLabel <- ggplot2:: ggproto(
+        "GeomTimeLineLabel", ggplot2::Geom,
+        required_aes = c('x'),
+        default_aes = ggplot2::aes(y=0.2),
+        draw_panel = timeline_label
+    )
+
+    ggplot2:: layer(
+        geom = GeomTimeLineLabel,
+        data = data, stat = "identity", position = "identity",
+        show.legend = FALSE, inherit.aes = TRUE,
+        params = list(na.rm = TRUE,n_max=n_max)
+    )
 }

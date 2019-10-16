@@ -8,10 +8,10 @@ The goal of NOAAsignifEarthQuakes is to ...
 
 ## Installation
 
-You can install the released version of NOAAsignifEarthQuakes from [CRAN](https://CRAN.R-project.org) with:
+You can install the released version of NOAAsignifEarthQuakes from git with:
 
 ``` r
-install.packages("NOAAsignifEarthQuakes")
+install_github("BreizhZut/NOAAsignifEarthQuakes")
 ```
 
 ## Example

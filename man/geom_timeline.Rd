@@ -4,7 +4,7 @@
 \alias{geom_timeline}
 \title{Displays a timeline of Earthquakes}
 \usage{
-geom_timeline(data = NULL, xmin=NULL,xmax=NULL, countries= NULL,...)
+geom_timeline(data = NULL,mapping=NULL,xmin=NULL,xmax=NULL, countries= NULL,alpha=0.5)
 }
 \arguments{
 \item{data}{The data to be displayed in this layer. There are three
@@ -22,13 +22,18 @@ the plot data. The return value must be a \code{data.frame}, and
 will be used as the layer data. A \code{function} can be created
 from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
+\item{mapping}{Set of aesthetic mappings created by \code{\link[=aes]{aes()}} or
+\code{\link[=aes_]{aes_()}}. If specified and \code{inherit.aes = TRUE} (the
+default), it is combined with the default mapping at the top level of the
+plot. You must supply \code{mapping} if there is no plot mapping.}
+
 \item{xmin}{start date for data vizualisation [Character] encoded as YYYY-MM-DD or [Date]}
 
 \item{xmax}{end date for data vizualisation [Character] encoded as YYYY-MM-DD or [Date]}
 
 \item{countries}{[Character] list of Countries to filter}
 
-\item{...}{inherited parameters}
+\item{alpha}{alpha parameter for transparency}
 }
 \value{
 ggplot plot object
@@ -47,5 +52,5 @@ ggplot(data=clean_data,aes(x=DATE,y=COUNTRY)) + geom_timeline()
 
 }
 \seealso{
-timeline_data timeline_draw geom_timeline_label
+timeline_data timeline_draw geom_timeline_label scale_y_discrete expand_scale
 }
