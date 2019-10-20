@@ -14,12 +14,14 @@ Suggests: testthat,
     rmarkdown
 Imports:
     dplyr,
+    ggplot2,
+    grid,
+    htmltools,
+    leaflet,
     lubridate,
     magrittr,
     readr,
     tidyselect,
-    ggplot2,
-    grid,
     scales
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1

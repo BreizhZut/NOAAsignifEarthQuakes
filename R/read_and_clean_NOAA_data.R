@@ -237,5 +237,6 @@ eq_clean_data <- function(raw_data){
             DEATHS = TOTAL_DEATHS,
             MAG=EQ_PRIMARY
             ) %>%
+        dplyr:: ungroup() %>%
         dplyr::select(col_out)
 }
