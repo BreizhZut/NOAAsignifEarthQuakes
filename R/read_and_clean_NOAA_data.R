@@ -113,6 +113,37 @@ build_date <- function(y_raw,m_raw,d_raw){
     }
 }
 
+#' Building dates form NOAA raw data
+#'
+#'@description
+#' Take 3 numeric as input: year, mounth and day (of the month).
+#' Year must be a valid 4 digit year. If month is NA, month is set to 01 (January),
+#' if day is NA, day of the month is set to 1.
+#'
+#' @param data raw NOAA data
+#'
+#' @usage eq_build_date(data)
+#'
+#' @return Date
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' source_noaa <- system.file("extdata","signif.txt",package="NOAAsignifEarthQuakes",mustWork=TRUE)
+#' noaa_raw <- load_NOAA_db(source_noaa)
+#' noaa_raw %>%dplyr::select('DAY','MONTH','YEAR') %>% eq_build_date()
+#' }
+eq_build_date <- function(data){
+    exp_date <- paste0(
+        "0000",
+        ifelse(is.na(data$MONTH),'01',stringr::str_pad(data$MONTH,2,pad = "0")),
+        ifelse(is.na(data$DAY),'01',stringr::str_pad(data$DAY,2,pad = "0"))
+    )
+    exp_date <- exp_date %>% lubridate::ymd()
+    lubridate::year(exp_date) <- data$YEAR
+    exp_date
+}
+
 #' Capitalize each word
 #'
 #' @description
@@ -126,7 +157,7 @@ build_date <- function(y_raw,m_raw,d_raw){
 #' @return character string
 #'
 simpleCap <- function(x) {
-    s <- strsplit(x, " ")[[1]]
+    s <- strsplit(x, "[ -]")[[1]]
     x <- paste(toupper(substring(s, 1, 1)), tolower(substring(s, 2)),sep = "", collapse = " ")
     s <- strsplit(x, "-")[[1]]
     paste(toupper(substring(s, 1, 1)),substring(s, 2),sep = "", collapse = "-")
@@ -151,9 +182,42 @@ clean_location <-function(location){
     loc_without_country <- sub(",$",", ",loc_without_country)
     # remaove aditionnal spaces
     loc_without_country <- sub("[ ]{2,}"," ",loc_without_country)
-    # remove everything beatween parethesis
+    # remove everything between parethesis
     loc_without_country <- sub("\\(.*\\)","",loc_without_country)
-    simpleCap(loc_without_country)
+    #simpleCap(loc_without_country)
+    loc_without_country
+}
+
+#' Clean Location Names in NOAA data
+#'
+#' @description
+#' Remove countries and unnecessary test,
+#' clean spaces and switch to title cap.
+#'
+#' @usage eq_build_location(data)
+#'
+#' @param data raw NOAA data
+#'
+#' @importFrom stringr str_trim str_to_title
+#'
+#' @return charater
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' source_noaa <- system.file("extdata","signif.txt",package="NOAAsignifEarthQuakes",mustWork=TRUE)
+#' noaa_raw <- load_NOAA_db(source_noaa)
+#' noaa_raw %>%dplyr::select('LOCATION_NAME') %>% eq_build_date()
+#' }
+eq_build_location <- function(data){
+    # remove country and anything between parenthesis
+    x <- gsub("(^[A-Z :]*:[ ]*|\\(.*\\)|;.*$)","",data$LOCATION_NAME)
+    # add space after comma
+    x <- gsub(",",", ",x)
+    # remove extra spaces
+    x <- stringr::str_trim(gsub(" {2,}"," ",x))
+    # switch cases
+    stringr::str_to_title(x)
 }
 
 #' Perform the cleaning of the NOAA data
@@ -200,7 +264,9 @@ clean_location <-function(location){
 #'
 #' @examples
 #' \dontrun{
-#' clean_data <- eq_clean_data(raw_data)
+#' source_noaa <- system.file("extdata","signif.txt",package="NOAAsignifEarthQuakes",mustWork=TRUE)
+#' noaa_raw <- load_NOAA_db(source_noaa)
+#' noaa_raw %>% eq_clean_data()
 #' }
 #' @export
 eq_clean_data <- function(raw_data){
@@ -215,28 +281,17 @@ eq_clean_data <- function(raw_data){
     # set retruned features
     col_out <- c("DATE","COUNTRY","LOCATION_NAME","LONGITUDE","LATITUDE","DEATHS","MAG")
     # declare feature as variable to avoid error message
-    DAY <- NULL
-    LATITUDE <- NULL
-    LONGITUDE <- NULL
-    MONTH <- NULL
-    YEAR <- NULL
-    COUNTRY <- NULL
-    LOCATION_NAME <- NULL
     TOTAL_DEATHS <- NULL
     EQ_PRIMARY <- NULL
+    . <- NULL
     # use dplyr to process the data
     raw_data %>%
         dplyr::select(col_sel) %>%
-        dplyr::rowwise() %>%
         dplyr::mutate(
-            DATE=build_date(YEAR,MONTH,DAY),
-#            LONGITUDE=as.numeric(LONGITUDE),
-#            LATITUDE=as.numeric(LATITUDE),
-            LOCATION_NAME=clean_location(LOCATION_NAME),
-#            COUNTRY=COUNTRY,
+            DATE = eq_build_date(.),
+            LOCATION_NAME = eq_build_location(.),
             DEATHS = TOTAL_DEATHS,
             MAG=EQ_PRIMARY
             ) %>%
-        dplyr:: ungroup() %>%
         dplyr::select(col_out)
 }

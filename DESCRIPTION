@@ -22,6 +22,7 @@ Imports:
     magrittr,
     readr,
     tidyselect,
-    scales
+    scales,
+    stringr
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1

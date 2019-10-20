@@ -42,7 +42,9 @@ Selected features TOTAL_DEATHS and EQ_RPIMARY are left unchanged but renames DEA
 }
 \examples{
 \dontrun{
-clean_data <- eq_clean_data(raw_data)
+source_noaa <- system.file("extdata","signif.txt",package="NOAAsignifEarthQuakes",mustWork=TRUE)
+noaa_raw <- load_NOAA_db(source_noaa)
+noaa_raw \%>\% eq_clean_data()
 }
 }
 \seealso{
