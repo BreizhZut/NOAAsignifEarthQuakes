@@ -79,40 +79,6 @@ load_NOAA_db <- function(data_file){
     readr::read_tsv(data_file,col_types=col_types)
 }
 
-#' Combine year, month and day numeric features into a date.
-#'
-#' @description
-#' Take 3 numeric as input: year, mounth and day (of the month).
-#' Year must be a valid 4 digit year. If month is NA, month is set to 01 (January),
-#' if day is NA, day of the month is set to 1.
-#'
-#' @param y_raw year numeric
-#' @param m_raw month numeric
-#' @param d_raw date numeric
-#'
-#' @usage build_date(y_raw,m_raw,d_raw)
-#'
-#' @details
-#' If year is null return NA
-#' If month is null set moth to january
-#' If day is null set day to 1
-#'
-#' @importFrom lubridate ymd year month day
-#'
-#' @return Date
-#'
-build_date <- function(y_raw,m_raw,d_raw){
-    if(is.na(y_raw)) {
-        NA
-    } else{
-        dt <- lubridate::ymd("0000-01-01")
-        lubridate::year(dt) <- y_raw
-        if(!is.na(m_raw)) {lubridate::month(dt) <- m_raw}
-        if(!is.na(d_raw)) {lubridate::day(dt) <- d_raw}
-        dt
-    }
-}
-
 #' Building dates form NOAA raw data
 #'
 #'@description
@@ -123,6 +89,8 @@ build_date <- function(y_raw,m_raw,d_raw){
 #' @param data raw NOAA data
 #'
 #' @usage eq_build_date(data)
+#'
+#' @seealso eq_clean_data
 #'
 #' @return Date
 #' @export
@@ -144,50 +112,6 @@ eq_build_date <- function(data){
     exp_date
 }
 
-#' Capitalize each word
-#'
-#' @description
-#' Take a character string as input, split into words
-#' the first letter of each word set to upper case next to lower case
-#'
-#' @param x input character string
-#'
-#' @usage simpleCap(x)
-#'
-#' @return character string
-#'
-simpleCap <- function(x) {
-    s <- strsplit(x, "[ -]")[[1]]
-    x <- paste(toupper(substring(s, 1, 1)), tolower(substring(s, 2)),sep = "", collapse = " ")
-    s <- strsplit(x, "-")[[1]]
-    paste(toupper(substring(s, 1, 1)),substring(s, 2),sep = "", collapse = "-")
-}
-
-#' Format the LOCATION_NAME colomn.
-#'
-#' @description
-#' Feature LOCATION_NAME is encoded as COUNTRY: Location. All set to upper case.
-#' Remove the country and capitalize the rest.
-#'
-#' @param location character string
-#'
-#' @usage clean_location(location)
-#'
-#' @return chahracter string
-#'
-clean_location <-function(location){
-    # detect and remove Country
-    loc_without_country <- sub("^[A-Z :]*:[ ]*","",location)
-    # add space after any commar
-    loc_without_country <- sub(",$",", ",loc_without_country)
-    # remaove aditionnal spaces
-    loc_without_country <- sub("[ ]{2,}"," ",loc_without_country)
-    # remove everything between parethesis
-    loc_without_country <- sub("\\(.*\\)","",loc_without_country)
-    #simpleCap(loc_without_country)
-    loc_without_country
-}
-
 #' Clean Location Names in NOAA data
 #'
 #' @description
@@ -200,6 +124,8 @@ clean_location <-function(location){
 #'
 #' @importFrom stringr str_trim str_to_title
 #'
+#' @seealso eq_clean_data
+#'
 #' @return charater
 #' @export
 #'
@@ -211,9 +137,9 @@ clean_location <-function(location){
 #' }
 eq_build_location <- function(data){
     # remove country and anything between parenthesis
-    x <- gsub("(^[A-Z :]*:[ ]*|\\(.*\\)|;.*$)","",data$LOCATION_NAME)
+    x <- gsub("(^[A-Z :]*:[ ]*|\\(.*\\)||\\[.*\\]|[:;].*$)","",data$LOCATION_NAME)
     # add space after comma
-    x <- gsub(",",", ",x)
+    x <- gsub(" *,",", ",x)
     # remove extra spaces
     x <- stringr::str_trim(gsub(" {2,}"," ",x))
     # switch cases
@@ -238,17 +164,13 @@ eq_build_location <- function(data){
 #' * MAG: Richter (equivalent) of the maginitude of the earthquake
 #'
 #' @details
-#' Features YEAR, MONTH and DAY are selected to define the feature DATE
-#' buld through function build_date.
-#'
-#' Features LONGITUDE, LATITUDE are simply converted into numeric
-#'
-#' Feature COUNTRY is left unchanged by the LOCATION_NAME is processed through package function clean_location.
+#' Features YEAR, MONTH and DAY are selected to define the feature DATE through function eq_build_date.
+#' Feature LOCATION_NAME is processed through package function eq_build_location.
 #'
 #' Select features: LONGITUDE, LATITUDE, COUNTRY, LOCATION_NAME to define location.
 #' LOCATION_NAME
 #'
-#' Selected features TOTAL_DEATHS and EQ_RPIMARY are left unchanged but renames DEATHS and MAG
+#' Selected features TOTAL_DEATHS and EQ_RPIMARY are left unchanged but renamed DEATHS and MAG
 #'
 #'
 #' @param raw_data dbl_df dataframe input data frame
@@ -260,7 +182,7 @@ eq_build_location <- function(data){
 #'
 #' @return dbl_df dataframe
 #'
-#' @seealso build_date clean_location
+#' @seealso eq_build_date eq_build_location
 #'
 #' @examples
 #' \dontrun{

@@ -24,3 +24,6 @@ noaa_raw <- load_NOAA_db(source_noaa)
 noaa_raw \%>\%dplyr::select('DAY','MONTH','YEAR') \%>\% eq_build_date()
 }
 }
+\seealso{
+eq_clean_data
+}

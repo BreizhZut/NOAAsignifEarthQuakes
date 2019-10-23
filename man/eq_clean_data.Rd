@@ -28,17 +28,13 @@ Process the data to obtain the followning features:
 * MAG: Richter (equivalent) of the maginitude of the earthquake
 }
 \details{
-Features YEAR, MONTH and DAY are selected to define the feature DATE
-buld through function build_date.
-
-Features LONGITUDE, LATITUDE are simply converted into numeric
-
-Feature COUNTRY is left unchanged by the LOCATION_NAME is processed through package function clean_location.
+Features YEAR, MONTH and DAY are selected to define the feature DATE through function eq_build_date.
+Feature LOCATION_NAME is processed through package function eq_build_location.
 
 Select features: LONGITUDE, LATITUDE, COUNTRY, LOCATION_NAME to define location.
 LOCATION_NAME
 
-Selected features TOTAL_DEATHS and EQ_RPIMARY are left unchanged but renames DEATHS and MAG
+Selected features TOTAL_DEATHS and EQ_RPIMARY are left unchanged but renamed DEATHS and MAG
 }
 \examples{
 \dontrun{
@@ -48,5 +44,5 @@ noaa_raw \%>\% eq_clean_data()
 }
 }
 \seealso{
-build_date clean_location
+eq_build_date eq_build_location
 }

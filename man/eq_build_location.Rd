@@ -23,3 +23,6 @@ noaa_raw <- load_NOAA_db(source_noaa)
 noaa_raw \%>\%dplyr::select('LOCATION_NAME') \%>\% eq_build_date()
 }
 }
+\seealso{
+eq_clean_data
+}
