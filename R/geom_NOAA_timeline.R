@@ -1,4 +1,3 @@
-#'
 #' Filter NOAA processed data by date and countries
 #'
 #' @description
@@ -50,14 +49,14 @@ timeline_data <- function(data=NULL,dmin=NULL,dmax=NULL,countries=NULL){
     if(!is.null(countries)){
         # warning Grouping rowwise data frame strips rowwise nature comes from
         data <- data %>%
-                dplyr::filter(COUNTRY %in% countries) %>% as.data.frame() %>%
+                dplyr::filter(COUNTRY %in% toupper(countries)) %>% as.data.frame() %>%
                 dplyr::group_by(COUNTRY) %>%
                 dplyr::mutate('MAG_RANK' = dplyr::row_number(dplyr::desc(MAG))) %>%
                 dplyr::ungroup()
     } else {
         data <- data %>% dplyr:: mutate('MAG_RANK' = dplyr::row_number(dplyr::desc(MAG)))
     }
-    data
+    data %>% dplyr::select("DATE","COUNTRY","LOCATION_NAME","DEATHS","MAG","MAG_RANK")
 }
 
 
