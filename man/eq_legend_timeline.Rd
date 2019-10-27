@@ -24,6 +24,7 @@ and for any other return the feature name in title case.
  eq_legend_timeline(mapping$fill)
  "Total nb of deaths"
  eq_legend_timeline(mapping$size)
+ "Richter scale magnitude"
 }
 
 }
