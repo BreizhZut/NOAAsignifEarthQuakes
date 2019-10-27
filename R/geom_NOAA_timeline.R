@@ -15,7 +15,7 @@
 #'
 #' @importFrom lubridate ymd
 #' @importFrom stats quantile
-#' @importFrom dplyr filter group_by mutate ungroup desc
+#' @importFrom dplyr filter group_by mutate ungroup desc select
 #' @return tbl_df dataframe
 #'
 #' @seealso timeline_draw geom_timeline
