@@ -40,7 +40,7 @@ ggplot plot object
 }
 \description{
 For a given (optional) selection of date range and countries.
-Teh resulting selection of earthquakes is represented by a circle along a time axis.
+The resulting selection of earthquakes is represented by a circle along a time axis.
 Optional feature enable to add a vertical axis usualy country aesthetic \code{y}.
 Additional optional aesthetics \code{fill} an \code{r} enable the user to represent
 additional continuous variables such as nb of deaths or magnitude.
@@ -52,5 +52,5 @@ ggplot(data=clean_data,aes(x=DATE,y=COUNTRY)) + geom_timeline()
 
 }
 \seealso{
-timeline_data timeline_draw geom_timeline_label scale_y_discrete expand_scale
+timeline_data geom_timeline_label relabel_legend
 }

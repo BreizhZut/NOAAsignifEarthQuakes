@@ -24,3 +24,20 @@ test_that("Filtered data has the right schema",{
     expect(class(filt_data$MAG)=='numeric',failure_message='Feature MAG should be a numeric')
     expect(class(filt_data$MAG_RANK)=='integer',failure_message='Feature MAG_RANK should be a integer')
 })
+
+context("eq_legend_timeline: building legends for geom_timeline")
+# if labels are changed in geom_timeline they should also be changed here
+test_that("eq_legend_timeline give the right results",{
+    mapping <- ggplot2::aes(y=COUNTRY,mag=MAG,deaths=DEATHS,mag2=mag)
+    expect(is.null(eq_legend_timeline(mapping$x)),
+           failure_message="If mapping does ot exist should return null")
+    expect(eq_legend_timeline(mapping$y)=="Country",
+           failure_message="Should return unknown value as titlecase")
+    expect(eq_legend_timeline(mapping$deaths)=="Total nb of deaths",
+           failure_message="Return wrong value for expr DEATHS")
+    expect(eq_legend_timeline(mapping$mag)=="Richter scale magnitude",
+           failure_message="Return wrong value for expr MAG")
+    expect(eq_legend_timeline(mapping$mag)=="Richter scale magnitude",
+           failure_message="Return wrong value for expr mag (case sensitive)")
+})
+

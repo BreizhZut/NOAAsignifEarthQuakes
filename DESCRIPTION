@@ -21,6 +21,7 @@ Imports:
     lubridate,
     magrittr,
     readr,
+    rlang,
     tidyselect,
     scales,
     stringr
