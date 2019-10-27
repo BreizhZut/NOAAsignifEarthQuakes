@@ -25,7 +25,7 @@
 #'
 eq_create_label <- function(data){
 
-    paste(
+    paste0(
         # if LOCATION_NAME is null set label to empty string
         ifelse(is.na(data$LOCATION_NAME),'',
                # else prepare location label
@@ -49,7 +49,6 @@ eq_create_label <- function(data){
         )
     )
 }
-
 
 
 #' Interactive map vizualization of earthquakes

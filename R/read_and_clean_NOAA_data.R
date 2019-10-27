@@ -179,6 +179,7 @@ eq_build_location <- function(data){
 #'
 #' @importFrom dplyr select mutate
 #' @importFrom magrittr %>%
+#' @importFrom stringr str_trim
 #'
 #' @return dbl_df dataframe
 #'
@@ -205,12 +206,14 @@ eq_clean_data <- function(raw_data){
     # declare feature as variable to avoid error message
     TOTAL_DEATHS <- NULL
     EQ_PRIMARY <- NULL
+    COUNTRY <- NULL
     . <- NULL
     # use dplyr to process the data
     raw_data %>%
         dplyr::select(col_sel) %>%
         dplyr::mutate(
             DATE = eq_build_date(.),
+            COUNTRY = stringr::str_trim(toupper(COUNTRY)),
             LOCATION_NAME = eq_build_location(.),
             DEATHS = TOTAL_DEATHS,
             MAG=EQ_PRIMARY

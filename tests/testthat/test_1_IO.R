@@ -6,6 +6,7 @@ test_that("Source file exists",{
 
 all_data <- load_NOAA_db(file_noaa)
 test_that("Data can be red",{
+    expect(any(class(all_data) == "tbl_df"),failure_message = "Result should be a tbl_df data.frame")
     expect(nrow(all_data)>0,failure_message = "Table should not be empty")
     input_cols <- c("YEAR","MONTH","DAY","LOCATION_NAME","LONGITUDE","LATITUDE")
     expect(all(input_cols %in% names(all_data)),failure_message = "Missing input columns")
@@ -36,7 +37,7 @@ test_that("Feature have the right type",{
     expect(class(all_data$EQ_PRIMARY)=='numeric',failure="EQ_PRIMARY should be numeric")
 })
 
-context("eq_build_date: creating date feature")
+context("eq_build_date: Creating date feature")
 test_that("eq_build_date produce expected results",{
     date_data <- dplyr::tbl_df(
         data.frame(
@@ -57,7 +58,7 @@ test_that("eq_build_date produce expected results",{
            failure_message="Function eq_build_date did not set NA day to the 1st")
 })
 
-context("eq_build_location: cleaning location feature")
+context("eq_build_location: Cleaning location feature")
 test_that("eq_build_date produce expected results",{
     location_data <- dplyr::tbl_df(
         data.frame(LOCATION_NAME = c(
@@ -92,10 +93,11 @@ test_that("eq_build_date produce expected results",{
 
 context("eq_clean_data: Cleaning input raw input data")
 output_cols <- c("DATE","LOCATION_NAME","LONGITUDE","LATITUDE","DEATHS","MAG")
-test_that("Head can be cleaned",{
+test_that("Head can be cleaned with the right schema",{
     ntest <- 20
     clean_head <- all_data %>% head(ntest) %>%
         eq_clean_data()
+    expect(any(class(clean_head) == "tbl_df"),failure_message = "Result should be a tbl_df data.frame")
     expect(all(output_cols %in% names(clean_head)),failure_message = "Missing output columns")
     expect(nrow(clean_head)==ntest,failure_message = "All rows should be present")
     expect(class(clean_head$DATE)=="Date",failure_message = "DATE feature should be date")
@@ -103,13 +105,14 @@ test_that("Head can be cleaned",{
     expect(is.numeric(clean_head$LATITUDE),failure_message = "LATITUDE should be numeric")
 })
 
-test_that("Tail can be cleaned",{
+test_that("Tail can be cleaned with the right schema",{
     ntest <- 20
     clean_tail <- all_data %>% tail(ntest) %>%
         eq_clean_data()
+    expect(any(class(clean_tail) == "tbl_df"),failure_message = "Result should be a tbl_df data.frame")
     expect(all(output_cols %in% names(clean_tail)),failure_message = "Missing output columns")
     expect(nrow(clean_tail)==ntest,failure_message = "All rows should be present")
-    expect(class(clean_tail$DATE)=="Date",failure_message = "DATE feature should be date")
+    expect(class(clean_tail$DATE)=="Date",failure_message = "DATE feature should be Date")
     expect(is.numeric(clean_tail$LONGITUDE),failure_message = "LONGITUDE should be numeric")
     expect(is.numeric(clean_tail$LATITUDE),failure_message = "LATITUDE should be numeric")
 })
