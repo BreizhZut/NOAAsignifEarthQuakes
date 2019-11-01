@@ -59,9 +59,6 @@ timeline_data <- function(data=NULL,dmin=NULL,dmax=NULL,countries=NULL){
     data %>% dplyr::select("DATE","COUNTRY","LOCATION_NAME","DEATHS","MAG","MAG_RANK")
 }
 
-
-
-
 #' Transform NOAA feature into human readable character
 #'
 #' @description
@@ -199,6 +196,7 @@ geom_timeline <- function(data = NULL,mapping=NULL,xmin=NULL,xmax=NULL, countrie
     GeomTimeLine <- ggplot2:: ggproto(
         "GeomTimeLine", ggplot2::Geom,
         required_aes = c('x'),
+        optional_aes = c('fill','size','y'),
         default_aes = ggplot2::aes(y=0.2,size=5,fill=1),
         draw_key = ggplot2::draw_key_pointrange,
         draw_panel = timeline_draw
@@ -242,7 +240,7 @@ geom_timeline <- function(data = NULL,mapping=NULL,xmin=NULL,xmax=NULL, countrie
 #'
 #' @usage timeline_label(data, panel_scales,coord,n_max=NULL)
 #'
-#' @importFrom dplyr filter
+#' @importFrom dplyr filter mutate
 #' @importFrom grid segmentsGrob textGrob gTree
 #'
 #' @return gTree instance
@@ -250,7 +248,7 @@ geom_timeline <- function(data = NULL,mapping=NULL,xmin=NULL,xmax=NULL, countrie
 timeline_label <- function(data, panel_scales,coord,n_max=NULL) {
 
     # filter data to keep only row with rank bellow n_max
-    data <-  data %>% dplyr::filter(rank <= n_max) %>% dplyr::mutate(group=dplyr::row_number())
+    data <-  data %>% dplyr::filter(rank <= n_max)# %>% dplyr::mutate(group=dplyr::row_number())
     # transfrom the data into the coordnate system
     coords <- data  %>% coord$transform(panel_scales)
     # buid vertical ticks mark using segment gorb
@@ -299,7 +297,7 @@ geom_timeline_label <- function(data=NULL, n_max =5) {
     # define GeomTimeLine instance
     GeomTimeLineLabel <- ggplot2:: ggproto(
         "GeomTimeLineLabel", ggplot2::Geom,
-        required_aes = c('x'),
+        required_aes = c('x','label'),
         default_aes = ggplot2::aes(y=0.2),
         draw_panel = timeline_label
     )

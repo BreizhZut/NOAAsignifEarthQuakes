@@ -4,14 +4,17 @@ test_that("Source file exists",{
     expect(file.exists(file_noaa),failure_message = paste("File missing for test",file_noaa))
 })
 
-all_data <- load_NOAA_db(file_noaa)
 test_that("Data can be red",{
+    expect_failure(
+        expect_warning(all_data <- load_NOAA_db(file_noaa)),
+        failure_message="load_NOAA_db should not produce warnings")
     expect(any(class(all_data) == "tbl_df"),failure_message = "Result should be a tbl_df data.frame")
     expect(nrow(all_data)>0,failure_message = "Table should not be empty")
     input_cols <- c("YEAR","MONTH","DAY","LOCATION_NAME","LONGITUDE","LATITUDE")
     expect(all(input_cols %in% names(all_data)),failure_message = "Missing input columns")
 })
 
+all_data <- load_NOAA_db(file_noaa)
 col_dt <- c("YEAR","MONTH","DAY")
 col_gps <- c("LONGITUDE","LATITUDE")
 col_loc <- c("COUNTRY","LOCATION_NAME")
@@ -95,8 +98,10 @@ context("eq_clean_data: Cleaning input raw input data")
 output_cols <- c("DATE","LOCATION_NAME","LONGITUDE","LATITUDE","DEATHS","MAG")
 test_that("Head can be cleaned with the right schema",{
     ntest <- 20
-    clean_head <- all_data %>% head(ntest) %>%
-        eq_clean_data()
+    expect_failure(
+        expect_warning(
+            clean_head <- all_data %>% head(ntest) %>%eq_clean_data()
+        ),failure_message = "eq_clean_data should not produce warnings")
     expect(any(class(clean_head) == "tbl_df"),failure_message = "Result should be a tbl_df data.frame")
     expect(all(output_cols %in% names(clean_head)),failure_message = "Missing output columns")
     expect(nrow(clean_head)==ntest,failure_message = "All rows should be present")
@@ -107,8 +112,10 @@ test_that("Head can be cleaned with the right schema",{
 
 test_that("Tail can be cleaned with the right schema",{
     ntest <- 20
-    clean_tail <- all_data %>% tail(ntest) %>%
-        eq_clean_data()
+    expect_failure(
+        expect_warning(
+            clean_tail <- all_data %>% tail(ntest) %>% eq_clean_data()
+        ),failure_message = "eq_clean_data should not produce warnings")
     expect(any(class(clean_tail) == "tbl_df"),failure_message = "Result should be a tbl_df data.frame")
     expect(all(output_cols %in% names(clean_tail)),failure_message = "Missing output columns")
     expect(nrow(clean_tail)==ntest,failure_message = "All rows should be present")
