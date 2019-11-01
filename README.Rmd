@@ -1,7 +1,7 @@
 ---
 output:
   md_document:
-    variant: markdown_github
+    variant: gfm
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -16,12 +16,50 @@ knitr::opts_chunk$set(
 
 # NOAAsignifEarthQuakes
 
-The goal of NOAAsignifEarthQuakes is to ...
+The goal of NOAAsignifEarthQuakes is to:
+
+1. Read and clean data from the NOAA Significant Earthquake Database^[Source: National Geophysical Data Center / World Data Service (NGDC/WDS); Significant Earthquake Database; National Geophysical Data Center, NOAA. doi:10.7289/V5TD9V7K.]
+1. Provide exploratory visualization tools:
+    1. Timelines of earthquakes by countries
+    1. Mapping of earthquakes in a specific region
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+### Loading the package
 
-```{r example}
-## basic example code
+```{r dependencies}
+library(NOAAsignifEarthQuakes)
+library(magrittr)
+library(ggplot2)
+```
+
+### Reading and cleaning the data
+
+```{r read_and_clean}
+## set the file input
+file_noaa <- system.file("extdata","signif.txt",
+                         package="NOAAsignifEarthQuakes",
+                         mustWork=TRUE)
+## Read and clean data
+noaa <- load_NOAA_db(file_noaa) %>% eq_clean_data()
+tail(noaa)
+```
+
+### Display a timeline
+
+```{r timeline_usa}
+geom_timeline(noaa,mapping=aes(size=MAG,fill=DEATHS),
+              countries='USA',
+              xmin='2000-01-01',
+              xmax='2017-01-01')
+```
+
+### Display a timeline with labels
+
+```{r timeline_usa_china_labels}
+g <- geom_timeline(noaa,mapping=aes(size=MAG,fill=DEATHS,y=COUNTRY),
+              countries=c('USA','China'),
+              xmin='2000-01-01',
+              xmax='2017-01-01') 
+g + geom_timeline_label()
 ```
