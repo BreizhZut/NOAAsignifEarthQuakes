@@ -31,21 +31,21 @@ eq_create_label <- function(data){
                # else prepare location label
                paste("<b>Location:</b>",
                      htmltools::htmlEscape(data$LOCATION_NAME),
-                     "</br>")
+                     "<br/>")
         ),
         # if MAG is null set label to empty string
         ifelse(is.na(data$MAG),'',
                # else prepare magnitude label
                paste("<b>Magnitude:</b> ",
                      htmltools::htmlEscape(data$MAG),
-                     "</br>")
+                     "<br/>")
         ),
         # if DEATHS is null set label to empty string
         ifelse(is.na(data$DEATHS),'',
                # else prepare Total deaths label
                paste("<b>Total deaths:</b>",
                      htmltools::htmlEscape(data$DEATHS),
-                     "</br>")
+                     "<br/>")
         )
     )
 }
@@ -99,7 +99,7 @@ eq_map <- function(data,annot_col=''){
     # Create leaflet map
     # add circle marker for each eartquake
     lfmap <- leaflet::leaflet(data) %>%
-        leaflet::addTiles()
+        leaflet::addTiles(urlTemplate = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
 
     if("popup_text" %in% names(data)){
         lfmap %>% leaflet::addCircleMarkers(
