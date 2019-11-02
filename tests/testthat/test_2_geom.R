@@ -68,6 +68,9 @@ test_that("geom_timeline produce a GeomTimeline",{
     expect(length(g$layers)==1,failure_message = "geom_timeline should contain 1 layer")
     expect(! is.null(g$layers[[1]]$geom),failure_message="layer should contain a geom")
     ggeom <- g$layers[[1]]$geom
+    expect_is(ggeom,"ggproto")
+    expect_is(ggeom,"GeomTimeLine")
+    expect_is(ggeom,"Geom")
     expect(all(c("ggproto","GeomTimeLine","Geom") %in% class(ggeom)),failure_message="geom should be a ggproto object of class GeomTimeLine inherited of class Geom")
     expect(ggeom$required_aes == "x",failure_message = "x should be a required aesthetic")
 })
