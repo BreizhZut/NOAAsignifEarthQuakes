@@ -2,10 +2,24 @@
 
 # NOAAsignifEarthQuakes
 
+This package is the result of the [Mastering Software Developmentin
+R](https://www.coursera.org/specializations/r) Capstone project. This
+course proposed by Johns Hopkins University was created adn taught by
+Roger D. Peng and Brooke Anderson of
+
+This project is centered around a dataset obtained from the U.S.
+National Oceanographic and Atmospheric Administration (NOAA). [Source:
+National Geophysical Data Center / World Data Service (NGDC/WDS);
+Significant Earthquake Database; NOAA.
+doi:10.7289/V5TD9V7K](https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.ngdc.mgg.hazards:G012153).
+This dataset is focussed on significant earthquakes around the world and
+contains information about 5,933 earthquakes over an approximately 4,000
+year time span.
+
 The goal of NOAAsignifEarthQuakes is to:
 
-1.  Read and clean data from the NOAA Significant Earthquake
-    Database\[1\]
+1.  Read and clean data from the National Oceanographic and Atmospheric
+    Administration (NOAA) Significant Earthquake Database
 2.  Provide exploratory visualization tools:
     1.  Timelines of earthquakes by countries
     2.  Mapping of earthquakes in a specific region
@@ -76,7 +90,3 @@ The map is fully interactive, for documentation purposes we show the
 following static version.
 
 ![](README-map_mexico-1.png)<!-- -->
-
-1.  Source: National Geophysical Data Center / World Data Service
-    (NGDC/WDS); Significant Earthquake Database; National Geophysical
-    Data Center, NOAA. <doi:10.7289/V5TD9V7K>.
