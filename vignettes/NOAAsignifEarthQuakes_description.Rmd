@@ -1,0 +1,345 @@
+---
+title: "NOAA Earthquake data Visualization"
+author: "D. P. Tweed"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning= FALSE,
+  message=FALSE
+)
+```
+
+# Introduction
+
+```{r dependencies, echo=FALSE}
+library(NOAAsignifEarthQuakes)
+# additionally for piping
+library(magrittr)
+```
+
+This package is the result of a project centered around a dataset obtained from the U.S. National Oceanographic and Atmospheric Administration (NOAA).
+This dataset is focussed on significant earthquakes around the world and contains information about 5,933 earthquakes over an approximately 4,000 year time span.
+
+The objective of this package is to:
+
+1. Efficently process the data
+1. Provide easy to use function for dedicated explorattory analysis 
+
+
+## Data source
+
+National Geophysical Data Center / World Data Service (NGDC/WDS): [Significant Earthquake Database. National Geophysical Data Center, NOAA. (doi:10.7289/V5TD9V7K)](https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.ngdc.mgg.hazards:G012153) 
+
+The data is incorporated into this package in file `r system.file("extdata","signif.txt",package="NOAAsignifEarthQuakes")`
+
+## Loading the package
+
+```{r ref.label='dependencies'}
+```
+```{r functions, echo=FALSE}
+desc_func <- dplyr::tbl_df(
+  data.frame(
+    Function = ls(getNamespace("NOAAsignifEarthQuakes"))
+  )
+) %>% 
+  dplyr::mutate(
+    Processing = Function %in% c("load_NOAA_db","eq_build_date","eq_build_location","eq_clean_data"),
+    Timeline= Function %in% c("eq_legend_timeline","geom_timeline","geom_timeline_label","timeline_data"),
+    Map=Function %in% c("eq_create_label","eq_map")
+  ) %>% 
+  dplyr::arrange(desc(Processing),desc(Timeline),desc(Map)) %>% 
+  dplyr::mutate(
+    Processing = ifelse(Processing,"&#10004;",""),
+    Timeline= ifelse(Timeline,"&#10004;",""),
+    Map=ifelse(Map,"&#10004;","")
+  ) 
+knitr::kable(
+  desc_func,
+  align=c("l","c","c","c"),
+  col.names=c("Function","Data Processing","Timeline visualization","Map visualization")
+)
+```
+
+# Reading and cleaning the data
+
+We use 2 main function to read and clean the data:
+1. `load_NOAA_db` : read the raw NOAA file
+1. `eq_clean_data`: process the resulting data frame using support finctions:
+    * `eq_build_date`: to create the date feature from input year, month and day
+    * `eq_build_locaton`: to proccess the location feature in a more human readable way
+
+## Reading the data: `load_NOAA_db`
+
+```{r read_data, echo=FALSE}
+file_noaa <- system.file("extdata","signif.txt",package="NOAAsignifEarthQuakes",mustWork=TRUE)
+noaa_raw <- load_NOAA_db(file_noaa)
+```
+```{r row_cols, echo=FALSE}
+noaa_name <- colnames(noaa_raw)
+```
+
+We odtain a table with `r ncol(noaa_raw)` features and `r nrow(noaa_raw)` observations. We describe the schema of the raw data in detail in the appendix.
+
+## Processing the data
+
+```{r clean_data, echo=FALSE}
+noaa_clean <- eq_clean_data(noaa_raw)
+```
+```{r clean_cols, echo=FALSE}
+clean_cols <- names(noaa_clean)
+```
+
+### Processing dates: `eq_build_date`
+
+We simply take the `YEAR`, `MONTH` and `DAY` features in order to create the date feature.
+We demonstrate on the first 5 and last % raw of the original data building a valid date feature named `clean_date`
+
+```{r date_head}
+knitr::kable(
+head(noaa_raw,5) %>% 
+  dplyr::select("DAY","MONTH","YEAR") %>%
+  dplyr::mutate(clean_date=eq_build_date(.))
+)
+```
+
+```{r date_tail}
+knitr::kable(
+tail(noaa_raw,5) %>% 
+  dplyr::select("DAY","MONTH","YEAR") %>%
+  dplyr::mutate(clean_date=eq_build_date(.))
+)
+```
+
+### Processing locations: `eq_build_location`
+
+This function consists on:
+* Removing the Country 
+* Extra location information within parethesis 
+* Correct white spaces 
+* Switch to Title case
+
+```{r }
+knitr::kable(
+head(noaa_raw,10) %>% 
+  dplyr::select("LOCATION_NAME") %>%
+  dplyr::mutate(clean_location=eq_build_location(.))
+)
+```
+
+### Cleaning the data; `eq_clean_data`
+
+Mainly this funcions consist of processing existing the features with the helper function above and select features reducing the raw data to `r ncol(noaa_clean)` features but still `r nrow(noaa_clean)` observations:
+
+1. **`r clean_cols[1]`** : date of the earthqukes event
+1. **`r clean_cols[2]`** : country where the earthquake occured
+1. **`r clean_cols[3]`** : location of the earthquake
+1. **`r clean_cols[4]`** : Longitude coordinate of the Earthquake epicenter
+1. **`r clean_cols[5]`** : Latitude coordinate of the Earthquake epicenter
+1. **`r clean_cols[6]`** : Total number of fatalities caused by the earthquakes
+1. **`r clean_cols[7]`** : Equivelent Richter scale Magnitude
+
+```{r ref.label='clean_data'}
+```
+The last 1 row of the resulting table are:
+```{r, echo=FALSE, results='asis'}
+knitr::kable(tail(noaa_clean,10))
+```
+
+# Building a Timeline 
+
+## Filtering the data with `timeline_data`
+
+This function consist on preparing the data prioir to building the timeline.
+It enable to:
+
+1. Drops features unnecessary to the timeline (e.g. `LATITUDE` and `LONGITUDE`)
+1. filter within a date range specified with keyword `dmin` and `dmax`
+1. filter 1 or several countries with keyword `countries`
+1. Additionnaly it create a feature `MAG_RANK` giving the rank order of earthquake by country in descreasing order of Magnitude
+
+```{r timeline_data}
+filt_noaa <- noaa_clean %>%
+  timeline_data(dmin='2010-01-01',dmax='2011-01-01',countries=c("USA","China"))
+```
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(filt_noaa)
+```
+
+## Showing timelines `geom_timeline`
+
+### For 1 country without easthetics
+
+```{r basic_timeline, results='asis',fig.width=7,fig.height=3}
+g_usa <- geom_timeline(noaa_clean,
+                       countries='USA',
+                       xmin='2000-01-01',
+                       xmax='2017-01-01')
+```
+
+### For multiple countries with easthetics
+
+This geom takes for optional aesthetics 
+
+* `y`: a factor variable such as `COUNTRY` to display mutiple timelines
+* `size`: a continuous variable scaling the point symbol (usually set to `MAG`)
+* `fill`: a continuous variable scaling the color symbol (usually set to `DEATHS`)
+
+```{r complex_timeline, results='asis',fig.width=7,fig.height=4}
+g_usachina <- geom_timeline(noaa_clean,
+              mapping = ggplot2::aes(
+                y=COUNTRY,
+                fill=DEATHS,
+                size= MAG
+              ),
+              countries=c('USA',"China"),
+              xmin='2000-01-01',
+              xmax='2017-01-01')
+g_usachina
+```
+
+### Sidenote: Legend labeling with `eq_legend_timeline`
+
+In order to present proper legend label we build function `eq_legend_timeline`.
+
+```{r eq_legend_timeline}
+# define fake aesthetics
+feat <- ggplot2::aes(aes_1=DATE,aes_2=MAG,aes_3=DEATHS,aes_4=COUNTRY,aes_5=LOCATION_NAME)
+# test eq_legend_timeline in a table
+legend_aes <- dplyr::tbl_df(data.frame(
+  aesthetic=c('aes_1','aes_2','aes_3','aes_4','aes_5')
+)) %>% dplyr::rowwise() %>%
+  dplyr::mutate(
+    feature= rlang::quo_name(feat[[aesthetic]]),
+    label= eq_legend_timeline(feat[[aesthetic]]))
+knitr::kable(legend_aes)
+```
+
+## Adding to timelines locations of most significant earthquakes `geom_timeline_label`
+
+### Adding labels to the previous timeline
+
+The function take `n_max` ads keyword to set the maximum number of locations to display. By default this value is set to 5.
+
+We go back to the first timeline and display the location of the 10 most significant earthquakes 
+```{r labeled_usa_timeline, results='asis',fig.width=7,fig.height=4}
+g_usa + geom_timeline_label(n_max=10)
+```
+
+We go back to the secondt timeline and display the location of the 5  most significant earthquakes 
+```{r labeled_usachina_timeline, results='asis',fig.width=7,fig.height=6}
+g_usachina + geom_timeline_label()
+```
+
+# Building a Map 
+
+## Setting a use case
+
+To create a map we have to filter the processed data for a country and specific date range so as to avoid overflowing the visualisation.
+
+```{r filt_noaa}
+filt_noaa <- noaa_clean %>% dplyr::filter(COUNTRY == "MEXICO" & lubridate::year(DATE) >= 2000)
+```
+
+## Map with Date popup `eq_map`
+
+Each point correspond to an earthquake with the size of the circle represnting the magnitude.
+
+```{r map_date_label, fig.width=7, fig.height=4}
+eq_map(filt_noaa,annot_col = "DATE")
+```
+
+## Map with annotated popup `eq_map` with `eq_create_label`
+
+Annotation is performed with `eq_create_label`.
+It simply consists on combining the `LOCATION_NAME`, `DEATHS` and `MAG` feature into a singled html encoded character. As demonstrated in the first 10 rows of our test case.
+```{r annot_noaa}
+annot_noaa <- filt_noaa %>% head(10) %>%
+  dplyr::mutate(annot_text=eq_create_label(.)) %>%
+  dplyr::select("DATE","LOCATION_NAME","DEATHS","MAG","annot_text")
+knitr::kable(annot_noaa)
+```
+
+It is call by `eq_map` when option `annot_col` is set to `"popup_test"`, thus giving the following result.
+```{r map_popup_label, fig.width=7, fig.height=4}
+eq_map(filt_noaa,annot_col = "popup_text")
+```
+
+# Summary
+
+The `NOAAsignifEarthQuakes` performs in a quite straitforward way 3 things
+
+* Read and prepare the raw NOAA data 
+* Enable the user to expore this date using a efficient timeline visualization
+* Enable the user to explore the event location 
+
+\appendix
+
+# Appendix: Raw data codebook
+
+We give a short description of the feature present in the raw data. We indicate the column type as we set it while reading the data. 
+
+1. Earthquake Id and type
+    * **`r noaa_name[1]`** : [Character] unique id for the earthquake
+    * **`r noaa_name[2]`** : [Character] Categorical set to **Tsu** if the earthquake generated a Tsunami (set to NA otherwise)
+1. Date Time variable
+    * **`r noaa_name[3]`** : [Integer] 4 digit year corresponding the event, range -2150 to 2018
+    * **`r noaa_name[4]`** : [Integer] 2 digit month corresponding the event, could be NA
+    * **`r noaa_name[5]`** : [Integer] 2 digit day of the month corresponding to the event
+    * **`r noaa_name[6]`** : [Integer] 2 digit hour corresponding the event
+    * **`r noaa_name[7]`** : [Integer] 2 digit minute corresponding to the event
+    * **`r noaa_name[8]`** : [Numeric] 2 digit seconds corresponding to the event
+1. Earthquake properties
+    * **`r noaa_name[9]`** : [Integer] Depth of the earthquake [km] (Valid values: 0 to 700 km)
+    * **`r noaa_name[10]`** : [Numeric] Equivalent Magnitude, take the value from one of the column below (supposidly only up to one contains a non-missing value)
+    * **`r noaa_name[11]`** : [Numeric] [Magnitude based on the moments magnitue scale](https://www.ngdc.noaa.gov/nndc/DescribeField.jsp?dataset=101650&s=20&field_name=EQ_MAG_MW) (Valid values: 0.0 to 9.9)
+    * **`r noaa_name[12]`** : [Numeric] [Surface-wave magnitude](https://www.ngdc.noaa.gov/nndc/DescribeField.jsp?dataset=101650&s=20&field_name=EQ_MAG_MS) (Valid values: 0.0 to 9.9)
+    * **`r noaa_name[13]`** : [Numeric] [Compressional body wave (P-wave) magnitude](https://www.ngdc.noaa.gov/nndc/DescribeField.jsp?dataset=101650&s=20&field_name=EQ_MAG_MB) (Valid values: 0.0 to 9.9)
+    * **`r noaa_name[14]`** : [Numeric] [Standard Richter Magintude](https://www.ngdc.noaa.gov/nndc/DescribeField.jsp?dataset=101650&s=20&field_name=EQ_MAG_ML) (Valid values: 0.0 to 9.9)
+    * **`r noaa_name[15]`** : [Numeric] [Magnitude estimated for field area, before sesmic instruments were in use](https://www.ngdc.noaa.gov/nndc/DescribeField.jsp?dataset=101650&s=20&field_name=EQ_MAG_MFA) (Valid values: 0.0 to 9.9)
+    * **`r noaa_name[16]`** : [Numeric] [Magnitude estimated using and unidentified method](https://www.ngdc.noaa.gov/nndc/DescribeField.jsp?dataset=101650&s=20&field_name=EQ_MAG_UNK) (Valid values: 0.0 to 9.9)
+    * **`r noaa_name[17]`** : [Character] [Modified Mercalli Intensity](https://www.ngdc.noaa.gov/nndc/DescribeField.jsp?dataset=101650&s=20&field_name=INTENSITY) (Valid values: 1 to 12)
+1. Location
+    * **`r noaa_name[18]`** : [Character] Country name where the event occured
+    * **`r noaa_name[19]`** : [Character] State where the event occured, 
+    * **`r noaa_name[20]`** : [Character] Location name ex: City or geographical landmark
+    * **`r noaa_name[21]`** : [Double] Latitude coordinates of the event
+    * **`r noaa_name[22]`** : [Double] Longitude coordinates of the event
+    * **`r noaa_name[23]`** : [Character] Event location, contains country name and locality
+1. Death and injuries
+    * **`r noaa_name[24]`** : [Integer] Number of deaths
+    * **`r noaa_name[25]`** : [Character] Factorial code 1 to 4
+    * **`r noaa_name[26]`** : [Integer] Number of Missing persons
+    * **`r noaa_name[27]`** : [Character] Factorial code 1 to 4
+    * **`r noaa_name[28]`** : [Integer] Number of injured persons
+    * **`r noaa_name[29]`** : [Character] Factorial code 1 to 4
+1. Property Damage
+    * **`r noaa_name[30]`** : [Numeric] Damage amount in M$
+    * **`r noaa_name[31]`** : [Character] Factorial code 1 to 4
+    * **`r noaa_name[32]`** : [Integer] Number of Houses destroyed
+    * **`r noaa_name[33]`** : [Character] Factorial code 1 to 4
+    * **`r noaa_name[34]`** : [Integer] Number of Houses damaged
+    * **`r noaa_name[35]`** : [Character] Factorial code 1 to 4
+1. Total Death and injuries including related events (Tsunami, Volcano etc..)
+    * **`r noaa_name[36]`** : [Integer] Number of deaths
+    * **`r noaa_name[37]`** : [Character] Factorial code 1 to 4
+    * **`r noaa_name[38]`** : [Integer] Number of Missing persons
+    * **`r noaa_name[39]`** : [Character] Factorial code 1 to 4
+    * **`r noaa_name[40]`** : [Integer] Number of injured
+    * **`r noaa_name[41]`** : [Character] Factorial code 1 to 4
+ 1. Total Property Damage including related events (Tsunami, Volcano etc..)
+    * **`r noaa_name[42]`** : [Numeric] Damage amount in M$
+    * **`r noaa_name[43]`** : [Character] Factorial code 1 to 4
+    * **`r noaa_name[44]`** : [Integer] Number of Houses destroyed
+    * **`r noaa_name[45]`** : [Character] Factorial code 1 to 4
+    * **`r noaa_name[46]`** : [Integer] Number of Houses damaged
+    * **`r noaa_name[47]`** : [Character] Factorial code 1 to 4
