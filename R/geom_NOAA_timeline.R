@@ -27,6 +27,7 @@
 #'                                dmax='2018-01-01',
 #'                                countries=c('USA','China'))
 #'}
+#' @export
 timeline_data <- function(data=NULL,dmin=NULL,dmax=NULL,countries=NULL){
 
     # declare feature as variable to avoid error message
@@ -68,7 +69,7 @@ timeline_data <- function(data=NULL,dmin=NULL,dmax=NULL,countries=NULL){
 #'
 #' @param quo quosure corresponding to mapping of a variable
 #'
-#' @importFrom rlang quo_is_null quo_get_expr
+#' @importFrom rlang quo_is_null quo_name
 #' @importFrom stringr str_to_title
 #'
 #' @return Character
@@ -82,19 +83,19 @@ timeline_data <- function(data=NULL,dmin=NULL,dmax=NULL,countries=NULL){
 #'  eq_legend_timeline(mapping$size)
 #'  "Richter scale magnitude"
 #' }
-#'
+#' @export
 eq_legend_timeline <- function(quo){
 
     if(is.null(quo)){
         return(NULL)
     } else if(rlang:: quo_is_null(quo)){
         return(NULL)
-    } else if(rlang:: quo_get_expr(quo) == "DEATHS"){
+    } else if(rlang:: quo_name(quo) == "DEATHS"){
         return("Total nb of deaths")
-    } else if(rlang:: quo_get_expr(quo) == "MAG"){
+    } else if(rlang:: quo_name(quo) == "MAG"){
         return("Richter scale magnitude")
     } else {
-        stringr::str_to_title(rlang::quo_get_expr(quo))
+        stringr::str_to_title(rlang::quo_name(quo))
     }
 }
 
@@ -231,49 +232,6 @@ geom_timeline <- function(data = NULL,mapping=NULL,xmin=NULL,xmax=NULL, countrie
 }
 
 
-#' timeline_label
-#'
-#' @param data input data transformed for vizualisation
-#' @param panel_scales panel parameters
-#' @param coord Coord object required to transform data coordinates to figure coordinates
-#' @param n_max parameter number of earthquake location to display by country
-#'
-#' @usage timeline_label(data, panel_scales,coord,n_max=NULL)
-#'
-#' @importFrom dplyr filter mutate
-#' @importFrom grid segmentsGrob textGrob gTree
-#'
-#' @return gTree instance
-#' @seealso geom_timeline_label
-timeline_label <- function(data, panel_scales,coord,n_max=NULL) {
-
-    # filter data to keep only row with rank bellow n_max
-    data <-  data %>% dplyr::filter(rank <= n_max)# %>% dplyr::mutate(group=dplyr::row_number())
-    # transfrom the data into the coordnate system
-    coords <- data  %>% coord$transform(panel_scales)
-    # buid vertical ticks mark using segment gorb
-    timeline_ticks <- grid::segmentsGrob(
-        x0=coords$x,
-        x1=coords$x,
-        y0=coords$y,
-        y1=coords$y+0.18,
-        gp= grid::gpar(alpha=0.7)
-    )
-    timeline_text <- grid::textGrob(
-        coords$label,
-        x=coords$x,
-        y=coords$y+0.2,
-        hjust=0,
-        vjust=0.5,
-        rot=45
-    )
-    # return the gTree instance
-    grid::gTree(children=grid::gList(
-        timeline_ticks,
-        timeline_text
-    ))
-}
-
 #' geom_timeline_label
 #'
 #' @param data input data transformed for vizualisation
@@ -293,6 +251,37 @@ timeline_label <- function(data, panel_scales,coord,n_max=NULL) {
 #' }
 #' @seealso timeline_label geom_timeline
 geom_timeline_label <- function(data=NULL, n_max =5) {
+
+    # This method was inserted within the main function as it could not be used
+    # and tested outside a geom
+    timeline_label <- function(data, panel_scales,coord,n_max=NULL) {
+
+        # filter data to keep only row with rank bellow n_max
+        data <-  data %>% dplyr::filter(rank <= n_max)# %>% dplyr::mutate(group=dplyr::row_number())
+        # transfrom the data into the coordnate system
+        coords <- data  %>% coord$transform(panel_scales)
+        # buid vertical ticks mark using segment gorb
+        timeline_ticks <- grid::segmentsGrob(
+            x0=coords$x,
+            x1=coords$x,
+            y0=coords$y,
+            y1=coords$y+0.18,
+            gp= grid::gpar(alpha=0.7)
+        )
+        timeline_text <- grid::textGrob(
+            coords$label,
+            x=coords$x,
+            y=coords$y+0.2,
+            hjust=0,
+            vjust=0.5,
+            rot=45
+        )
+        # return the gTree instance
+        grid::gTree(children=grid::gList(
+            timeline_ticks,
+            timeline_text
+        ))
+    }
 
     # define GeomTimeLine instance
     GeomTimeLineLabel <- ggplot2:: ggproto(
