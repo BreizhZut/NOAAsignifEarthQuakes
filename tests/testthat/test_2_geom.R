@@ -74,6 +74,7 @@ test_that("geom_timeline produce a GeomTimeline",{
     expect(all(c("ggproto","GeomTimeLine","Geom") %in% class(ggeom)),failure_message="geom should be a ggproto object of class GeomTimeLine inherited of class Geom")
     expect(ggeom$required_aes == "x",failure_message = "x should be a required aesthetic")
 })
+# Test usefull for developement purposes
 test_that("geom_timeline produce the expected figure",{
     g <- geom_timeline(noaa,
                        mapping=aes(fill=DEATHS,size=MAG),
@@ -91,7 +92,7 @@ test_that("geom_timeline produce the expected figure",{
 
 context("geom_timeline_label")
 g <- geom_timeline(noaa,
-                   mapping=aes(fill=DEATHS,size=MAG,y=COUNTRY),
+                   mapping=ggplot2::aes(fill=DEATHS,size=MAG,y=COUNTRY),
                    countries=c('USA','CHINA'),
                    xmin='2000-01-01',
                    xmax='2017-01-01')
