@@ -2,6 +2,12 @@
 
 # NOAAsignifEarthQuakes
 
+<!-- badges: start -->
+
+[![Travis build
+status](https://travis-ci.org/BreizhZut/NOAAsignifEarthQuakes.svg?branch=master)](https://travis-ci.org/BreizhZut/NOAAsignifEarthQuakes)
+<!-- badges: end -->
+
 This package is the result of the [Mastering Software Developmentin
 R](https://www.coursera.org/specializations/r) Capstone project. This
 course proposed by Johns Hopkins University was created adn taught by
