@@ -15,9 +15,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-<!-- badges: start -->
-[![Travis build status](https://travis-ci.org/BreizhZut/NOAAsignifEarthQuakes.svg?branch=master)](https://travis-ci.org/BreizhZut/NOAAsignifEarthQuakes)
-<!-- badges: end -->
 
 # NOAAsignifEarthQuakes
 
